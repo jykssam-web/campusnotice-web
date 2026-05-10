@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
 
@@ -12,6 +12,33 @@ function Login({ setUser, setSchoolData }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [school, setSchool] = useState(null)
+
+  // ✅ 추가: URL 파라미터에서 자동 로그인 정보 받기
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const paramSchoolId = params.get('schoolId')
+    const paramSchoolName = params.get('schoolName')
+    const paramAdminId = params.get('adminId')
+    const paramAtptCode = params.get('atptCode')
+    const paramSdSchulCode = params.get('sdSchulCode')
+
+    // teacher-web에서 파라미터가 전달되면 자동 로그인
+    if (paramSchoolId && paramAdminId) {
+      const schoolObj = {
+        id: paramSchoolId,
+        name: paramSchoolName,
+        adminId: paramAdminId,
+        atptCode: paramAtptCode,
+        sdSchulCode: paramSdSchulCode,
+        isActive: true
+      }
+      setSchool(schoolObj)
+      setSchoolData(schoolObj)
+      setUser({ role: 'schoolAdmin', school: schoolObj })
+      // URL에서 파라미터 제거
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [setUser, setSchoolData])
 
   const handleSchoolLogin = async (e) => {
     e.preventDefault()
@@ -76,7 +103,6 @@ function Login({ setUser, setSchoolData }) {
       justifyContent: 'center',
       padding: '16px'
     }}>
-      {/* 헬퍼 버튼 */}
       <div style={{
         position: 'fixed',
         top: '24px',
